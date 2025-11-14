@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    environment {
+        DEPLOY_DIR = '/var/www/html'   // Change this to your actual deploy path
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo '📥 Cloning HTML project from GitHub...'
+                checkout scm
+            }
+        }
+
+        stage('Build (Optional)') {
+            steps {
+                echo '⚙️ Building project (if using static site generator, else skip)...'
+                // Example: if you use npm for static build
+                // sh 'npm install && npm run build'
+                sh 'echo "No build required for static HTML site."'
+            }
+        }
+
+        stage('Test HTML Files') {
+            steps {
+                echo '🧪 Validating HTML files...'
+                // Simple HTML validation example
+                sh '''
+                    if grep -R "<html" .; then
+                      echo "HTML files detected and valid!"
+                    else
+                      echo "No HTML content found!"
+                      exit 1
+                    fi
+                '''
+            }
+        }
+
+        stage('Deploy to Server') {
+            steps {
+                echo '🚀 Deploying website to web server directory...'
+                // Example for Linux/Apache
+                sh '''
+                    sudo rm -rf ${DEPLOY_DIR}/*
+                    sudo cp -r * ${DEPLOY_DIR}/
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Website successfully deployed!'
+        }
+        failure {
+            echo '❌ Deployment failed. Check logs for details.'
+        }
+    }
+}
